@@ -8,7 +8,7 @@ var DoublePendulumApp = /** @class */ (function () {
         this.m1 = 10;
         this.m2 = 10;
         this.a1 = Math.PI / 2;
-        this.a2 = Math.PI;
+        this.a2 = Math.PI / 2;
         this.a1Vel = 0;
         this.a2Vel = 0;
         this.a1Acc = 0;
@@ -17,55 +17,19 @@ var DoublePendulumApp = /** @class */ (function () {
         this.y1 = 0;
         this.x2 = 0;
         this.y2 = 0;
+        this.mouseDown = false;
         this.Render = function () {
-            if (_this.Ctx === null) {
-                window.alert("failed to create canvas and context!");
-                return;
+            if (!_this.mouseDown) {
+                _this.CalcAccAndVel();
             }
-            var num1 = -_this.g * (2 * _this.m1 + _this.m2) * Math.sin(_this.a1);
-            var num2 = -_this.m2 * _this.g * Math.sin(_this.a1 - 2 * _this.a2);
-            var num3 = -2 * Math.sin(_this.a1 - _this.a2) * _this.m2;
-            var num4 = _this.a2Vel * _this.a2Vel * _this.r2 + _this.a1Vel * _this.a1Vel * _this.r1 * Math.cos(_this.a1 - _this.a2);
-            var den = _this.r1 * (2 * _this.m1 + _this.m2 - _this.m2 * Math.cos(2 * _this.a1 - 2 * _this.a2));
-            _this.a1Acc = (num1 + num2 + num3 * num4) / den;
-            num1 = 2 * Math.sin(_this.a1 - _this.a2);
-            num2 = _this.a1Vel * _this.a1Vel * _this.r1 * (_this.m1 + _this.m2) + _this.g * (_this.m1 + _this.m2) * Math.cos(_this.a1) + _this.a2Vel * _this.a2Vel * _this.r2 * _this.m2 * Math.cos(_this.a1 - _this.a2);
-            den = _this.r2 * (2 * _this.m1 + _this.m2 - _this.m2 * Math.cos(2 * _this.a1 - 2 * _this.a2));
-            _this.a2Acc = (num1 * num2) / den;
-            _this.Ctx.fillStyle = "white";
-            _this.Ctx.fillRect(-_this.Container.width / 2, -_this.Container.height / 2, _this.Container.width, _this.Container.height);
-            _this.Ctx.strokeStyle = "black";
-            _this.Ctx.fillStyle = "black";
-            _this.x1 = _this.r1 * Math.sin(_this.a1);
-            _this.y1 = _this.r1 * Math.cos(_this.a1);
-            _this.Ctx.beginPath();
-            _this.Ctx.moveTo(0, 0);
-            _this.Ctx.lineTo(_this.x1, _this.y1);
-            _this.Ctx.closePath();
-            _this.Ctx.stroke();
-            _this.Ctx.beginPath();
-            _this.Ctx.arc(_this.x1, _this.y1, _this.m1, 0, 2 * Math.PI);
-            _this.Ctx.fill();
-            _this.Ctx.closePath();
-            _this.Ctx.stroke();
-            _this.x2 = _this.x1 + _this.r2 * Math.sin(_this.a2);
-            _this.y2 = _this.y1 + _this.r2 * Math.cos(_this.a2);
-            _this.Ctx.beginPath();
-            _this.Ctx.moveTo(_this.x1, _this.y1);
-            _this.Ctx.lineTo(_this.x2, _this.y2);
-            _this.Ctx.closePath();
-            _this.Ctx.stroke();
-            _this.Ctx.beginPath();
-            _this.Ctx.arc(_this.x2, _this.y2, _this.m2, 0, 2 * Math.PI);
-            _this.Ctx.fill();
-            _this.Ctx.closePath();
-            _this.a1Vel += _this.a1Acc;
-            _this.a2Vel += _this.a2Acc;
+            _this.RenderPendulum();
             // damping if you want.
             // this.a1Vel *= 0.9;
             // this.a2Vel *= 0.9;
-            _this.a1 += _this.a1Vel;
-            _this.a2 += _this.a2Vel;
+            _this.x1 = _this.r1 * Math.sin(_this.a1);
+            _this.y1 = _this.r1 * Math.cos(_this.a1);
+            _this.x2 = _this.x1 + _this.r2 * Math.sin(_this.a2);
+            _this.y2 = _this.y1 + _this.r2 * Math.cos(_this.a2);
             requestAnimationFrame(_this.Render);
         };
         this.Container = document.createElement('canvas');
@@ -76,11 +40,104 @@ var DoublePendulumApp = /** @class */ (function () {
             window.alert("failed to create canvas and context!");
             return;
         }
+        window.addEventListener("mousedown", function () {
+            _this.mouseDown = true;
+        });
+        window.addEventListener("mouseup", function () {
+            _this.mouseDown = false;
+        });
+        window.addEventListener("mousemove", function (e) {
+            if (_this.mouseDown) {
+                _this.a1 += e.movementX / 100;
+                _this.a2 += e.movementY / 100;
+                _this.a1Vel = 0;
+                _this.a2Vel = 0;
+                _this.a1Acc = 0;
+                _this.a2Acc = 0;
+            }
+        });
         this.Ctx.translate(this.Container.width / 2, this.Container.height / 2);
+        this.Ctx.font = "10px consolas";
         this.Render();
     }
+    DoublePendulumApp.prototype.CalcAccAndVel = function () {
+        var num1 = -this.g * (2 * this.m1 + this.m2) * Math.sin(this.a1);
+        var num2 = -this.m2 * this.g * Math.sin(this.a1 - 2 * this.a2);
+        var num3 = -2 * Math.sin(this.a1 - this.a2) * this.m2;
+        var num4 = this.a2Vel * this.a2Vel * this.r2 + this.a1Vel * this.a1Vel * this.r1 * Math.cos(this.a1 - this.a2);
+        var den = this.r1 * (2 * this.m1 + this.m2 - this.m2 * Math.cos(2 * this.a1 - 2 * this.a2));
+        this.a1Acc = (num1 + num2 + num3 * num4) / den;
+        num1 = 2 * Math.sin(this.a1 - this.a2);
+        num2 = this.a1Vel * this.a1Vel * this.r1 * (this.m1 + this.m2) + this.g * (this.m1 + this.m2) * Math.cos(this.a1) + this.a2Vel * this.a2Vel * this.r2 * this.m2 * Math.cos(this.a1 - this.a2);
+        den = this.r2 * (2 * this.m1 + this.m2 - this.m2 * Math.cos(2 * this.a1 - 2 * this.a2));
+        this.a2Acc = (num1 * num2) / den;
+        this.a1Vel += this.a1Acc;
+        this.a2Vel += this.a2Acc;
+        this.a1 += this.a1Vel;
+        this.a2 += this.a2Vel;
+    };
+    DoublePendulumApp.prototype.RenderPendulum = function () {
+        if (this.Ctx === null) {
+            window.alert("failed to create canvas and context!");
+            return;
+        }
+        this.Ctx.fillStyle = "#666666";
+        this.Ctx.fillRect(-this.Container.width / 2, -this.Container.height / 2, this.Container.width, this.Container.height);
+        this.Ctx.strokeStyle = "black";
+        this.Ctx.fillStyle = "black";
+        this.Ctx.beginPath();
+        this.Ctx.moveTo(0, 0);
+        this.Ctx.lineTo(this.x1, this.y1);
+        this.Ctx.closePath();
+        this.Ctx.stroke();
+        this.Ctx.beginPath();
+        this.Ctx.arc(this.x1, this.y1, this.m1, 0, 2 * Math.PI);
+        this.Ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.stroke();
+        this.Ctx.beginPath();
+        this.Ctx.moveTo(this.x1, this.y1);
+        this.Ctx.lineTo(this.x2, this.y2);
+        this.Ctx.closePath();
+        this.Ctx.stroke();
+        this.Ctx.beginPath();
+        this.Ctx.arc(this.x2, this.y2, this.m2, 0, 2 * Math.PI);
+        this.Ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.fillText(this.Pad(this.x1.toFixed(0), 10) + " " +
+            this.Pad(this.y1.toFixed(0), 10) + " " +
+            this.Pad(this.x2.toFixed(0), 10) + " " +
+            this.Pad(this.y2.toFixed(0), 10) + " " +
+            this.Pad(this.ToDegrees(this.a1).toFixed(2), 10) + " " +
+            this.Pad(this.ToDegrees(this.a2).toFixed(2), 10) + " " +
+            this.Pad(this.ToDegrees(this.a1Vel).toFixed(2), 10) + " " +
+            this.Pad(this.ToDegrees(this.a2Vel).toFixed(2), 10) + " " +
+            this.Pad(this.ToDegrees(this.a1Acc).toFixed(2), 10) + " " +
+            this.Pad(this.ToDegrees(this.a2Acc).toFixed(2), 10) + " ", -this.Container.width / 2, this.Container.height / 2 - 20);
+    };
+    DoublePendulumApp.prototype.ToDegrees = function (n) {
+        return n * 57.2958;
+    };
+    DoublePendulumApp.prototype.Pad = function (str, digits) {
+        while (str.length < digits) {
+            str = " " + str;
+        }
+        return str;
+    };
     return DoublePendulumApp;
 }());
 window.onload = function () {
-    document.body.appendChild(new DoublePendulumApp().Container);
+    var header = document.createElement('div');
+    header.style.backgroundColor = "black";
+    header.style.boxShadow = "0 0 4px black";
+    header.style.display = "flex";
+    header.style.height = "50px";
+    header.style.justifyContent = "center";
+    header.style.marginBottom = "4px";
+    document.body.appendChild(header);
+    var div = document.createElement('div');
+    div.style.display = "flex";
+    div.style.justifyContent = "center";
+    div.appendChild(new DoublePendulumApp().Container);
+    document.body.appendChild(div);
 };
